@@ -1,6 +1,11 @@
 package com.bothty.mobilebankingjpa.dto.account;
 
-public record CreatAccountRequest(
+import java.math.BigDecimal;
 
+public record CreatAccountRequest(
+    Integer customer,
+    Integer accountType,
+    String actCurrency,
+    BigDecimal balance
 ) {
 }
