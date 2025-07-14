@@ -19,7 +19,6 @@ public interface AccountMapper {
     AccountResponseDto toAccountResponse(Account account);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(source = "accountType", target = "accountType.id")
     void fromAccountPartially(UpdateAccountRequest updateAccountRequest,
                               @MappingTarget Account account);
 

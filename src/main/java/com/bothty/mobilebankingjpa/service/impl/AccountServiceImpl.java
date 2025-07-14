@@ -74,7 +74,12 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public AccountResponseDto findAccountByCustomer(Integer customerId) {
-        Account account = accountRepository.findByCustomer_Id(customerId)
+
+        Customer customer = customerRepository.findById(customerId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer is not found")
+        );
+
+        Account account = accountRepository.findByCustomer(customer)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "Customer ID is not found"
@@ -85,16 +90,33 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void deleteAccountByAccountNo(String actNo) {
+        Account account = accountRepository.findByAccountNo(actNo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "AccountNo is not found"));
 
+        accountRepository.delete(account);
     }
 
     @Override
     public AccountResponseDto updateAccountByAccountNo(String actNo, UpdateAccountRequest updateAccountRequest) {
-        return null;
+
+        Account account = accountRepository.findByAccountNo(actNo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "AccountNo is not found"));
+
+        account.setBalance(updateAccountRequest.balance());
+
+        account = accountRepository.save(account);
+
+        return accountMapper.toAccountResponse(account);
     }
 
     @Override
     public void disableAccountByAccountNo(String actNo) {
 
+        Account account = accountRepository.findByAccountNo(actNo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        account.setIsDeleted(true);
+
+        accountRepository.save(account);
     }
 }

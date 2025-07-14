@@ -2,18 +2,20 @@ package com.bothty.mobilebankingjpa.controller;
 
 
 import com.bothty.mobilebankingjpa.dto.account.CreateAccountRequest;
+import com.bothty.mobilebankingjpa.dto.account.UpdateAccountRequest;
 import com.bothty.mobilebankingjpa.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/account")
+@RequestMapping("/api/v1/accounts")
 public class AccountController {
 
     private final AccountService accountService;
@@ -38,6 +40,63 @@ public class AccountController {
                         "status", "success"
                 ),
                 HttpStatus.CREATED
+        );
+    }
+
+    @GetMapping("/{actNo}")
+    public ResponseEntity<?> findAccountByAccountNo(@PathVariable String actNo){
+        return new ResponseEntity<>(
+                Map.of(
+                        "data", accountService.findAccountByAccountNo(actNo),
+                        "message", "AccountNo is found",
+                        "status", "successfully"
+                ),HttpStatus.FOUND
+        );
+    }
+
+    @GetMapping("/{customerId}")
+    public ResponseEntity<?> findAccountByCustomer(@PathVariable Integer customerId){
+        return new ResponseEntity<>(
+                Map.of(
+                        "data", accountService.findAccountByCustomer(customerId),
+                        "message", "AccountNo is found",
+                        "status", "successfully"
+                ),HttpStatus.FOUND
+        );
+    }
+
+    @DeleteMapping("/{actNo}")
+    public ResponseEntity<?> deleteAccountByAccountNo(@PathVariable String actNo){
+
+        accountService.deleteAccountByAccountNo(actNo);
+
+        return new ResponseEntity<>(
+                Map.of(
+                        "message", "Account is deleted",
+                        "status", "success"
+                ),HttpStatus.OK
+        );
+    }
+
+    @PutMapping("/{actNo}")
+    public ResponseEntity<?> updateAccountByAccountNo(@PathVariable String actNo, @Valid @RequestBody UpdateAccountRequest updateAccountRequest){
+        return new ResponseEntity<>(
+                Map.of(
+                        "message", "Account is update successfully",
+                        "status", "success",
+                        "data", accountService.updateAccountByAccountNo(actNo, updateAccountRequest)
+                ),HttpStatus.OK
+        );
+    }
+
+    @PutMapping("/close/{actNo}")
+    public ResponseEntity<?> disableAccountByAccountNo(@PathVariable String actNo){
+        accountService.disableAccountByAccountNo(actNo);
+        return new ResponseEntity<>(
+                Map.of(
+                        "message", "Account is disable",
+                        "status", "success"
+                ),HttpStatus.OK
         );
     }
 }
