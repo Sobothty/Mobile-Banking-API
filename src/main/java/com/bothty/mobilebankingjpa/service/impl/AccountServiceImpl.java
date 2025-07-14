@@ -1,10 +1,15 @@
 package com.bothty.mobilebankingjpa.service.impl;
 
 import com.bothty.mobilebankingjpa.domain.Account;
+import com.bothty.mobilebankingjpa.domain.AccountType;
+import com.bothty.mobilebankingjpa.domain.Customer;
 import com.bothty.mobilebankingjpa.dto.account.AccountResponseDto;
+import com.bothty.mobilebankingjpa.dto.account.CreateAccountRequest;
 import com.bothty.mobilebankingjpa.dto.account.UpdateAccountRequest;
 import com.bothty.mobilebankingjpa.mapper.AccountMapper;
 import com.bothty.mobilebankingjpa.repository.AccountRepository;
+import com.bothty.mobilebankingjpa.repository.AccountTypeRepository;
+import com.bothty.mobilebankingjpa.repository.CustomerRepository;
 import com.bothty.mobilebankingjpa.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Random;
 
 
 @Service
@@ -20,6 +26,35 @@ public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
+    private final CustomerRepository customerRepository;
+    private final AccountTypeRepository accountTypeRepository;
+
+    @Override
+    public AccountResponseDto createNewAccount(CreateAccountRequest createAccountRequest) {
+
+        Customer customer = customerRepository.findByPhoneNumber(createAccountRequest.customerPhoneNumber())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer Phone Number isn't found"));
+
+        AccountType accountType = accountTypeRepository.findById(createAccountRequest.accountType())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account Type isn't found"));
+
+        Account account = new Account();
+        String actNo;
+
+        do {
+            actNo = String.format("%09d", new Random().nextInt(1_000_000_000));
+        } while (accountRepository.existsByAccountNo(actNo));
+
+        account.setAccountNo(actNo);
+        account.setAccountType(accountType);
+        account.setActCurrency(createAccountRequest.actCurrency());
+        account.setBalance(createAccountRequest.balance());
+        account.setIsDeleted(false);
+        account.setCustomer(customer);
+
+        account = accountRepository.save(account);
+        return accountMapper.toAccountResponse(account);
+    }
 
     @Override
     public List<AccountResponseDto> getAllAccount() {

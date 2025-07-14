@@ -7,9 +7,9 @@ import java.math.BigDecimal;
 
 public record AccountResponseDto(
     String accountNo,
-    AccountTypeResponse accountTypeResponse,
+    AccountTypeResponse accountType,
     String actCurrency,
     BigDecimal balance,
-    CustomerResponseDto customerResponseDto
+    CustomerResponseDto customer
 ) {
 }

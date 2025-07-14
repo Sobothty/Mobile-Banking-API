@@ -15,7 +15,7 @@ public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @Column(unique = true, nullable = false, length = 32)
+    @Column(unique = true, length = 32)
     private String accountNo;
     @ManyToOne
     private AccountType accountType;
