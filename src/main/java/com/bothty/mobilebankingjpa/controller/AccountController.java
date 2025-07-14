@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -30,20 +29,18 @@ public class AccountController {
               ),
               HttpStatus.OK
       );
-    };
+    }
 
     @PostMapping
     public ResponseEntity<?> createNewAccount(@Valid @RequestBody CreateAccountRequest createAccountRequest){
+
         return new ResponseEntity<>(
-                Map.of(
-                        "message", "Account is created successfully",
-                        "status", "success"
-                ),
+                accountService.createNewAccount(createAccountRequest),
                 HttpStatus.CREATED
         );
     }
 
-    @GetMapping("/{actNo}")
+    @GetMapping("/act-no/{actNo}")
     public ResponseEntity<?> findAccountByAccountNo(@PathVariable String actNo){
         return new ResponseEntity<>(
                 Map.of(
@@ -54,7 +51,7 @@ public class AccountController {
         );
     }
 
-    @GetMapping("/{customerId}")
+    @GetMapping("/customer/{customerId}")
     public ResponseEntity<?> findAccountByCustomer(@PathVariable Integer customerId){
         return new ResponseEntity<>(
                 Map.of(
