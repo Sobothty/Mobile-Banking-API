@@ -69,4 +69,14 @@ public class CustomerController {
                 HttpStatus.OK
         );
     }
+
+    @PutMapping("/disable/{phoneNumber}")
+    public ResponseEntity<?> disableCustomerByPhoneNumber(@PathVariable String phoneNumber){
+        return new ResponseEntity<>(
+                Map.of(
+                        "status", "success",
+                        "message", "Customer is disable successfully"
+                ),HttpStatus.NO_CONTENT
+        );
+    }
 }

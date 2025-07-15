@@ -13,4 +13,5 @@ public interface CustomerService {
     CustomerResponseDto findByPhoneNumber(String phoneNumber);
     void deleteByPhoneNumber(String phoneNumber);
     CustomerResponseDto updateCustomer(String phoneNumber, UpdateCustomerRequestDto updateCustomerRequestDto);
+    void disableCustomerByPhoneNumber(String phoneNumber);
 }

@@ -54,15 +54,15 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public List<CustomerResponseDto> getAllCustomer() {
-        List<Customer> customers = customerRepository.findAll();
-        return customers.stream().map(customer -> customerMapper.fromCustomerToCustomerResponse(customer)
+        List<Customer> customers = customerRepository.findAllByIsDeletedIsFalse();
+        return customers.stream().map(customerMapper::fromCustomerToCustomerResponse
         ).toList();
     }
 
     @Override
     public CustomerResponseDto findByPhoneNumber(String phoneNumber) {
-        return customerRepository.findByPhoneNumber(phoneNumber)
-                .map(customer -> customerMapper.fromCustomerToCustomerResponse(customer)
+        return customerRepository.findByPhoneNumberAndIsDeletedIsFalse(phoneNumber)
+                .map(customerMapper::fromCustomerToCustomerResponse
                 )
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer Phone number not found"));
     }
@@ -87,5 +87,14 @@ public class CustomerServiceImpl implements CustomerService {
         customer = customerRepository.save(customer);
 
         return customerMapper.fromCustomerToCustomerResponse(customer);
+    }
+
+    @Override
+    public void disableCustomerByPhoneNumber(String phoneNumber) {
+        if (!customerRepository.isExistPhoneNumber(phoneNumber)){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer Phone Number is not found");
+        }
+
+        customerRepository.disableCustomerByPhoneNumber(phoneNumber);
     }
 }
