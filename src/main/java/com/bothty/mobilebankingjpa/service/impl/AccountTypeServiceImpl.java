@@ -38,8 +38,7 @@ public class AccountTypeServiceImpl implements AccountTypeService {
         return new AccountTypeResponse(
                 accountType.getId(),
                 accountType.getName(),
-                accountType.getDescription(),
-                accountType.getWithDrawLimit().toString()
+                accountType.getDescription()
         );
     }
 

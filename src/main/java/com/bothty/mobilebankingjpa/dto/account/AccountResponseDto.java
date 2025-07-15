@@ -10,6 +10,7 @@ public record AccountResponseDto(
     AccountTypeResponse accountType,
     String actCurrency,
     BigDecimal balance,
-    CustomerResponseDto customer
+    CustomerResponseDto customer,
+    BigDecimal overLimit
 ) {
 }

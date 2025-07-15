@@ -27,6 +27,8 @@ public class Account {
     @Column(nullable = false)
     private Boolean isDeleted;
 
+    private BigDecimal overLimit;
+
     @ManyToOne
     private Customer customer;
 

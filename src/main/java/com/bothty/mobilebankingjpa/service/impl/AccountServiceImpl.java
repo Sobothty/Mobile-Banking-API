@@ -3,6 +3,7 @@ package com.bothty.mobilebankingjpa.service.impl;
 import com.bothty.mobilebankingjpa.domain.Account;
 import com.bothty.mobilebankingjpa.domain.AccountType;
 import com.bothty.mobilebankingjpa.domain.Customer;
+import com.bothty.mobilebankingjpa.domain.Segment;
 import com.bothty.mobilebankingjpa.dto.account.AccountResponseDto;
 import com.bothty.mobilebankingjpa.dto.account.CreateAccountRequest;
 import com.bothty.mobilebankingjpa.dto.account.UpdateAccountRequest;
@@ -10,6 +11,7 @@ import com.bothty.mobilebankingjpa.mapper.AccountMapper;
 import com.bothty.mobilebankingjpa.repository.AccountRepository;
 import com.bothty.mobilebankingjpa.repository.AccountTypeRepository;
 import com.bothty.mobilebankingjpa.repository.CustomerRepository;
+import com.bothty.mobilebankingjpa.repository.SegmentRepository;
 import com.bothty.mobilebankingjpa.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,12 +30,16 @@ public class AccountServiceImpl implements AccountService {
     private final AccountMapper accountMapper;
     private final CustomerRepository customerRepository;
     private final AccountTypeRepository accountTypeRepository;
+    private final SegmentRepository segmentRepository;
 
     @Override
     public AccountResponseDto createNewAccount(CreateAccountRequest createAccountRequest) {
 
         Customer customer = customerRepository.findByPhoneNumber(createAccountRequest.customerPhoneNumber())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Customer Phone Number isn't found"));
+
+        Segment segment = segmentRepository.findBySegmentName(customer.getSegment().getSegmentName())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         AccountType accountType = accountTypeRepository.findById(createAccountRequest.accountType())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account Type isn't found"));
@@ -50,6 +56,7 @@ public class AccountServiceImpl implements AccountService {
         account.setActCurrency(createAccountRequest.actCurrency());
         account.setBalance(createAccountRequest.balance());
         account.setIsDeleted(false);
+        account.setOverLimit(segment.getBenefit());
         account.setCustomer(customer);
 
         account = accountRepository.save(account);

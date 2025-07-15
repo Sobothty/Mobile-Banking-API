@@ -1,11 +1,15 @@
 package com.bothty.mobilebankingjpa.service.impl;
 
 import com.bothty.mobilebankingjpa.domain.Customer;
+import com.bothty.mobilebankingjpa.domain.KYC;
+import com.bothty.mobilebankingjpa.domain.Segment;
 import com.bothty.mobilebankingjpa.dto.customer.CreateCustomerRequest;
 import com.bothty.mobilebankingjpa.dto.customer.CustomerResponseDto;
 import com.bothty.mobilebankingjpa.dto.customer.UpdateCustomerRequestDto;
+import com.bothty.mobilebankingjpa.dto.customer.VerifyCustomerRequest;
 import com.bothty.mobilebankingjpa.mapper.CustomerMapper;
 import com.bothty.mobilebankingjpa.repository.CustomerRepository;
+import com.bothty.mobilebankingjpa.repository.SegmentRepository;
 import com.bothty.mobilebankingjpa.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,9 +24,12 @@ public class CustomerServiceImpl implements CustomerService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+    private final SegmentRepository segmentRepository;
 
     @Override
     public CustomerResponseDto createNewCustomer(CreateCustomerRequest createCustomerRequest) {
+
+        KYC kyc = new KYC();
 
         if (customerRepository.existsByEmail(createCustomerRequest.email())) {
             throw new ResponseStatusException(
@@ -31,7 +38,6 @@ public class CustomerServiceImpl implements CustomerService {
             );
         }
 
-
         if (customerRepository.existsByPhoneNumber(createCustomerRequest.phoneNumber())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -39,8 +45,23 @@ public class CustomerServiceImpl implements CustomerService {
             );
         }
 
-        Customer customer = customerMapper.toCustomer(createCustomerRequest);
+        Segment segment = segmentRepository.findBySegmentName(createCustomerRequest.segment())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Segment is not found"));
+
+        Customer customer = new Customer();
+        customer.setFullName(createCustomerRequest.fullName());
+        customer.setGender(createCustomerRequest.gender());
+        customer.setEmail(createCustomerRequest.email());
+        customer.setPhoneNumber(createCustomerRequest.phoneNumber());
+        customer.setRemark(createCustomerRequest.remark());
         customer.setIsDeleted(false);
+        customer.setSegment(segment);
+
+        kyc.setNationalCardId(createCustomerRequest.nationalCardId());
+        kyc.setIsDeleted(false);
+        kyc.setIsVerify(false);
+        customer.setKyc(kyc);
+        kyc.setCustomer(customer);
 
         customer = customerRepository.save(customer);
 
@@ -96,5 +117,18 @@ public class CustomerServiceImpl implements CustomerService {
         }
 
         customerRepository.disableCustomerByPhoneNumber(phoneNumber);
+    }
+
+    @Override
+    public void verifyCustomer(VerifyCustomerRequest verifyCustomerRequest) {
+        Customer customer = customerRepository.findByPhoneNumber(verifyCustomerRequest.phoneNumber())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Phone Number isn't found"));
+
+        KYC kyc = customer.getKyc();
+        if (kyc.getNationalCardId().equals(verifyCustomerRequest.nationalCardId())){
+            kyc.setIsVerify(true);
+        }else {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "National ID Card isn't Correct");
+        }
     }
 }

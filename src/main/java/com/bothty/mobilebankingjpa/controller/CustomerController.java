@@ -2,6 +2,7 @@ package com.bothty.mobilebankingjpa.controller;
 
 import com.bothty.mobilebankingjpa.dto.customer.CreateCustomerRequest;
 import com.bothty.mobilebankingjpa.dto.customer.UpdateCustomerRequestDto;
+import com.bothty.mobilebankingjpa.dto.customer.VerifyCustomerRequest;
 import com.bothty.mobilebankingjpa.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
@@ -77,6 +79,17 @@ public class CustomerController {
                         "status", "success",
                         "message", "Customer is disable successfully"
                 ),HttpStatus.NO_CONTENT
+        );
+    }
+
+    @PutMapping("/verify")
+    public ResponseEntity<?> verifyCustomer(@Valid @RequestBody VerifyCustomerRequest verifyCustomerRequest){
+        customerService.verifyCustomer(verifyCustomerRequest);
+        return new ResponseEntity<>(
+                Map.of(
+                        "timestamp", LocalDate.now(),
+                        "message", "Customer is verify successfully"
+                ),HttpStatus.OK
         );
     }
 }

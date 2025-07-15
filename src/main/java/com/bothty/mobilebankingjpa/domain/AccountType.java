@@ -21,8 +21,6 @@ public class AccountType {
     @Column(columnDefinition = "TEXT")
     private String description;
     @Column(nullable = false)
-    private Double withDrawLimit;
-    @Column(nullable = false)
     private Boolean isActive;
 
     @OneToMany(mappedBy = "accountType")

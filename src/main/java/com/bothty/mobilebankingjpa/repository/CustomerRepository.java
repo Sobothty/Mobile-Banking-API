@@ -31,4 +31,5 @@ public interface CustomerRepository extends JpaRepository<Customer, Integer> {
     Optional<Customer> findByPhoneNumberAndIsDeletedIsFalse(String phoneNumber);
 
     List<Customer> findAllByIsDeletedIsFalse();
+
 }

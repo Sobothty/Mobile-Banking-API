@@ -40,4 +40,7 @@ public class Customer {
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
     private KYC kyc;
+
+    @ManyToOne
+    private Segment segment;
 }
