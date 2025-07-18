@@ -19,8 +19,7 @@ public class SegmentServiceImpl implements SegmentService {
     public List<SegmentRequestResponse> getAllSegment() {
         return segmentRepository.findAll()
                 .stream().map(segment -> new SegmentRequestResponse(
-                        segment.getSegmentName(),
-                        segment.getBenefit()
+                        segment.getSegmentName()
                 )).toList();
     }
 
@@ -30,13 +29,11 @@ public class SegmentServiceImpl implements SegmentService {
         Segment segment = new Segment();
 
         segment.setSegmentName(segmentRequestResponse.segmentName());
-        segment.setBenefit(segmentRequestResponse.benefit());
 
         segmentRepository.save(segment);
 
         return new SegmentRequestResponse(
-                segmentRequestResponse.segmentName(),
-                segmentRequestResponse.benefit()
+                segmentRequestResponse.segmentName()
         );
     }
 }

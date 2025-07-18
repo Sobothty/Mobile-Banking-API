@@ -18,9 +18,6 @@ public class Segment {
     @NotBlank
     private String segmentName;
 
-    @NotNull
-    private BigDecimal benefit;
-
     @OneToMany(mappedBy = "segment")
     private List<Customer> customer;
 }

@@ -13,14 +13,15 @@ import com.bothty.mobilebankingjpa.repository.AccountTypeRepository;
 import com.bothty.mobilebankingjpa.repository.CustomerRepository;
 import com.bothty.mobilebankingjpa.repository.SegmentRepository;
 import com.bothty.mobilebankingjpa.service.AccountService;
+import com.bothty.mobilebankingjpa.utils.Currency;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Random;
-
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +32,7 @@ public class AccountServiceImpl implements AccountService {
     private final CustomerRepository customerRepository;
     private final AccountTypeRepository accountTypeRepository;
     private final SegmentRepository segmentRepository;
+
 
     @Override
     public AccountResponseDto createNewAccount(CreateAccountRequest createAccountRequest) {
@@ -45,6 +47,26 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account Type isn't found"));
 
         Account account = new Account();
+
+        switch (createAccountRequest.actCurrency()) {
+            case Currency.USD -> {
+                if (createAccountRequest.balance().compareTo(BigDecimal.valueOf(5.00)) < 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Balance must be 5$ or more than 5$");
+                } else {
+                    account.setActCurrency(String.valueOf(createAccountRequest.actCurrency()));
+                    account.setBalance(createAccountRequest.balance());
+                }
+            }
+            case Currency.RIEL -> {
+                if (createAccountRequest.balance().compareTo(BigDecimal.valueOf(40000)) < 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Balance must be 40000Riel or more than 40000Riel");
+                } else {
+                    account.setActCurrency(String.valueOf(createAccountRequest.actCurrency()));
+                    account.setBalance(createAccountRequest.balance());
+                }
+            }
+        }
+
         String actNo;
 
         do {
@@ -53,10 +75,16 @@ public class AccountServiceImpl implements AccountService {
 
         account.setAccountNo(actNo);
         account.setAccountType(accountType);
-        account.setActCurrency(createAccountRequest.actCurrency());
-        account.setBalance(createAccountRequest.balance());
         account.setIsDeleted(false);
-        account.setOverLimit(segment.getBenefit());
+
+        switch (segment.getSegmentName()) {
+            case "REGULAR" -> account.setOverLimit(BigDecimal.valueOf(5000));
+
+            case "SILVER" -> account.setOverLimit(BigDecimal.valueOf(10000));
+
+            case "GOLD" -> account.setOverLimit(BigDecimal.valueOf(50000));
+        }
+
         account.setCustomer(customer);
 
         account = accountRepository.save(account);
