@@ -6,13 +6,18 @@ import com.bothty.mobilebankingjpa.repository.MediaRepository;
 import com.bothty.mobilebankingjpa.service.MediaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -23,50 +28,97 @@ import java.util.UUID;
 public class MediaServiceImpl implements MediaService {
 
 
-    @Value("media.server.path")
+    @Value("${media.server.path}")
     private String serverPath;
 
-    @Value("media.base-uri")
+    @Value("${media.base-uri}")
     private String baseUri;
 
     private final MediaRepository mediaRepository;
 
     @Override
-    public MediaResponse upload(MultipartFile file) throws IOException {
+    public List<MediaResponse> upload(List<MultipartFile> files) throws IOException {
 
+        List<MediaResponse> responses = new ArrayList<>();
 
-        String name = UUID.randomUUID().toString();
+        for (MultipartFile file : files){
 
-        //Find Extension
-        int lastIndex = Objects.requireNonNull(file.getOriginalFilename()).lastIndexOf(".");
+            // Generate Name
+            String name = UUID.randomUUID().toString();
 
-        //Substring to get extension
-        String extension = file.getOriginalFilename()
-                .substring(lastIndex + 1);
+            //Find Extension
+            int lastIndex = Objects.requireNonNull(file.getOriginalFilename()).lastIndexOf(".");
 
-        //Create path
-        Path path = Paths.get(serverPath + String.format("%s.%s", name, extension));
+            //Substring to get extension
+            String extension = file.getOriginalFilename()
+                    .substring(lastIndex + 1);
 
-        try{
-            Files.copy(file.getInputStream(), path);
-        }catch (Exception e){
-            e.printStackTrace();
+            //Create path
+            Path path = Paths.get(serverPath + String.format("%s.%s", name, extension));
+
+            try{
+                Files.copy(file.getInputStream(), path);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            Media media = new Media();
+            media.setName(name);
+            media.setImageUrl(String.valueOf(path));
+            media.setMimeType(file.getContentType());
+            media.setExtension(extension);
+            media.setIsDeleted(false);
+
+            mediaRepository.save(media);
+
+            MediaResponse mediaResponse = MediaResponse.builder()
+                    .name(media.getName())
+                    .imageUrl(baseUri + String.format("%s.%s", name, extension))
+                    .size(file.getSize())
+                    .mimeType(media.getMimeType())
+                    .build();
+
+            responses.add(mediaResponse);
         }
 
-        Media media = new Media();
-        media.setName(name);
-        media.setImageUrl(String.valueOf(path));
-        media.setMimeType(file.getOriginalFilename());
-        media.setExtension(extension);
-        media.setIsDeleted(false);
+        return responses;
+    }
 
-        mediaRepository.save(media);
+    @Override
+    public List<MediaResponse> getAllMedia() throws IOException {
 
-        return MediaResponse.builder()
-                .name(media.getName())
-                .imageUrl(media.getImageUrl())
-                .size(file.getSize())
-                .mimeType(media.getMimeType())
-                .build();
+        File folder = new File(serverPath);
+        List<MediaResponse> responses = new ArrayList<>();
+        if (folder.exists() && folder.isDirectory()){
+            File[] files = folder.listFiles();
+
+            //Loop each file
+            if (files != null){
+                for (File file : files){
+                    if (file.isFile()){
+                        responses.add(MediaResponse.builder()
+                                        .name(file.getName())
+                                        .mimeType(Files.probeContentType(file.toPath()))
+                                        .imageUrl(baseUri + String.format("%s.%s", file.getName(), file.getName()))
+                                        .size(file.length())
+                                .build());
+                    }
+                }
+            }
+        }
+
+        return responses;
+    }
+
+    @Override
+    public Resource loadMediaResource(String mediaName) throws IOException {
+
+        Path fileName = Paths.get(serverPath).resolve(mediaName).normalize();
+
+        if(!Files.exists(fileName) || !Files.isRegularFile(fileName)){
+            throw new IOException("Media not found with name: " + mediaName);
+        }
+
+        return new UrlResource(fileName.toUri());
     }
 }
